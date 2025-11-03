@@ -37,3 +37,6 @@ PyPDF2
 # Testing
 pytest
 httpx # For TestClient
+
+pydantic[email]
+pysqlite3-binary==0.5.4

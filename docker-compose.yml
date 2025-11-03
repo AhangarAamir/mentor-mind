@@ -1,0 +1,80 @@
+# /mentormind-backend/docker-compose.yml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: mentormind_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${DB_USER:-user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-mentormind_db}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-mentormind_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: mentormind_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: mentormind_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/app/app
+      - ./data:/app/data
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-mentormind_db}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-a_very_secret_key}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: mentormind_worker
+    command: celery -A app.tasks.celery_app.celery worker --loglevel=info
+    volumes:
+      - ./app:/app/app
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-mentormind_db}
+      - REDIS_URL=redis://redis:6379/0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - redis
+      - db
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    container_name: mentormind_scheduler
+    command: celery -A app.tasks.celery_app.celery beat --loglevel=info
+    volumes:
+      - ./app:/app/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,39 @@
+# /mentormind-backend/requirements.txt
+# FastAPI and Server
+fastapi
+uvicorn[standard]
+
+# Database (PeeWee ORM + Postgres Driver)
+peewee
+psycopg2-binary
+peewee-migrate
+
+# Pydantic for settings management
+pydantic-settings
+
+# Authentication
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]
+python-multipart # For form data (file uploads)
+
+# Background Jobs
+celery
+redis
+
+# Vector DB and Embeddings
+chromadb
+sentence-transformers
+
+# LangChain and LLM
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+
+# PDF Parsing
+PyPDF2
+
+# Testing
+pytest
+httpx # For TestClient

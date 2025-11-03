@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  FaHome, FaTachometerAlt, FaQuestionCircle, FaPencilAlt, FaUser, 
-  FaUsers, FaLink, FaChartBar, FaFileUpload, FaCog, FaFileAlt, 
-  FaChevronLeft, FaChevronRight 
+import {
+  FaHome, FaTachometerAlt, FaQuestionCircle, FaPencilAlt, FaUser,
+  FaUsers, FaLink, FaChartBar, FaFileUpload, FaCog, FaFileAlt,
+  FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
 
 interface SidebarLink {
@@ -43,9 +43,8 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div 
-      className={`relative flex-shrink-0 bg-clip-padding backdrop-filter backdrop-blur-xl bg-opacity-20 border border-gray-700 text-gray-200 ${isOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out h-[calc(100vh-2rem)] m-4 rounded-2xl shadow-2xl`}
-      style={{ backgroundColor: 'rgba(20, 20, 30, 0.7)' }}
+    <div
+      className={`relative flex-shrink-0 bg-gray-900/70 backdrop-filter backdrop-blur-xl border border-gray-700 text-gray-200 ${isOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out h-[calc(100vh-2rem)] m-4 rounded-2xl shadow-2xl`}
     >
       <div className="flex items-center justify-between p-4 border-b border-gray-700">
         {isOpen && <h2 className="text-xl font-bold text-purple-400 tracking-wider">MentorMind</h2>}
@@ -61,11 +60,10 @@ const Sidebar: React.FC = () => {
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center p-3 rounded-lg transition duration-200 text-base font-medium group relative ${
-                isActive 
-                  ? 'bg-purple-600 text-white shadow-lg' 
+              className={`flex items-center p-3 rounded-lg transition duration-200 text-base font-medium group relative ${isActive
+                  ? 'bg-purple-600 text-white shadow-lg'
                   : 'hover:bg-gray-700 hover:text-white'
-              }`}
+                }`}
             >
               <Icon className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
               {isOpen && <span className="ml-4 transform transition-all duration-300">{link.name}</span>}

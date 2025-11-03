@@ -36,9 +36,8 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#1a1a2e] p-4">
-      <div 
-        className="w-full max-w-md p-10 rounded-2xl shadow-2xl animate-fadeInUp bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-20 border border-gray-700"
-        style={{ backgroundColor: 'rgba(20, 20, 30, 0.7)' }}
+      <div
+        className="w-full max-w-md p-10 rounded-2xl shadow-2xl animate-fadeInUp bg-gray-900/70 backdrop-filter backdrop-blur-lg border border-gray-700"
       >
         <h2 className="text-4xl font-extrabold text-center text-white mb-3">Welcome Back!</h2>
         <p className="text-center text-gray-400 mb-8">Login to continue your learning journey.</p>

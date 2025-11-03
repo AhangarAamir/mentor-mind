@@ -10,9 +10,9 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1a1a2e]">
-      {isAuthenticated && <Navbar />}
+      <Navbar /> {/* Always render Navbar */}
       <div className="flex flex-1">
-        {isAuthenticated && <Sidebar />}
+        {isAuthenticated && <Sidebar />} {/* Sidebar still conditional */}
         <main className="flex-1 p-6 overflow-y-auto">
           <AppRoutes />
         </main>

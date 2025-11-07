@@ -1,34 +1,33 @@
 # /mentormind-backend/app/api/students.py
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.db.models import User
+from app.db import crud
 from app.core.dependencies import get_current_student_user
+from app.api.schemas import StudentReportCard # Reusing the model from parents API
 
 router = APIRouter()
 
-class StudentDashboardData(BaseModel):
-    lessons_completed: int
-    quiz_attempts: int
-    average_score: float
-    learning_streak_days: int
-    weak_topics: list[str]
-
-@router.get("/dashboard", response_model=StudentDashboardData)
+@router.get("/dashboard", response_model=StudentReportCard)
 def get_student_dashboard(current_user: User = Depends(get_current_student_user)):
     """
     Returns personalized dashboard data for the logged-in student.
-    This is mock data and should be replaced with real database queries.
+    Fetches real quiz data and uses placeholders for other metrics.
     """
-    # TODO: Implement actual database queries to fetch this data
-    # For example:
-    # lessons_completed = QuizAttempt.select().where(QuizAttempt.student == current_user.id).count()
-    # weak_topics = [wt.topic for wt in WeakTopic.select().where(WeakTopic.student == current_user.id)]
+    report_data = crud.get_student_report_data(current_user.id)
     
-    return StudentDashboardData(
-        lessons_completed=5,
-        quiz_attempts=12,
-        average_score=85.5,
-        learning_streak_days=7,
-        weak_topics=["Optics", "Thermodynamics"]
+    if not report_data:
+        raise HTTPException(status_code=404, detail="Student data not found.")
+
+    # Combine real data with dummy data as requested
+    dashboard_data = StudentReportCard(
+        student_name=report_data["student_name"],
+        quiz_attempts=report_data["quiz_attempts"],
+        average_score=report_data["average_score"],
+        weak_topics=report_data["weak_topics"],
+        # --- Dummy Data ---
+        lessons_completed=5, 
+        learning_streak_days=7 
     )
+    
+    return dashboard_data

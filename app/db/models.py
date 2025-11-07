@@ -54,11 +54,13 @@ class Quiz(BaseModel):
     lesson = ForeignKeyField(Lesson, backref='quizzes')
     questions = TextField() # Storing questions as JSON string
     
-class QuizAttempt(BaseModel):
+class StudentQuizAttempt(BaseModel):
     id = AutoField()
     student = ForeignKeyField(User, backref='quiz_attempts')
-    quiz = ForeignKeyField(Quiz, backref='attempts')
-    answers = TextField() # Storing answers as JSON string
+    topic = CharField()
+    grade = IntegerField()
+    questions = TextField()  # JSON of questions, options, and correct_answer
+    answers = TextField()    # JSON of the student's answers
     score = FloatField()
     attempted_at = DateTimeField(default=datetime.datetime.now)
 
@@ -76,6 +78,19 @@ class IngestionJob(BaseModel):
     status = CharField(choices=[(s.value, s.name) for s in IngestionStatus])
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
+
+class Conversation(BaseModel):
+    id = AutoField()
+    student = ForeignKeyField(User, backref='conversations')
+    created_at = DateTimeField(default=datetime.datetime.now)
+    updated_at = DateTimeField(default=datetime.datetime.now)
+
+class Message(BaseModel):
+    id = AutoField()
+    conversation = ForeignKeyField(Conversation, backref='messages')
+    sender = CharField() # 'student' or 'tutor'
+    content = TextField()
+    created_at = DateTimeField(default=datetime.datetime.now)
 
 class Badge(BaseModel):
     id = AutoField()

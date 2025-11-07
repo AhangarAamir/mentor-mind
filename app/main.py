@@ -6,11 +6,11 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from peewee import PeeweeException
 
-from app.api import auth, users, parents, students, rag, ingest
+from app.api import auth, users, parents, students, rag, ingest, quiz
 from app.db.base import database
 from app.db.models import (
     User, StudentProfile, ParentStudentMap, Lesson, Quiz,
-    QuizAttempt, WeakTopic, IngestionJob, Badge
+    StudentQuizAttempt, WeakTopic, IngestionJob, Badge, 
 )
 from app.services.chroma_service import ChromaService
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # List of database models
 MODELS = [
     User, StudentProfile, ParentStudentMap, Lesson, Quiz,
-    QuizAttempt, WeakTopic, IngestionJob, Badge
+    StudentQuizAttempt, WeakTopic, IngestionJob, Badge
 ]
 
 @asynccontextmanager
@@ -111,6 +111,7 @@ app.include_router(parents.router, prefix="/api/parents", tags=["Parents"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
 app.include_router(rag.router, prefix="/api/rag", tags=["RAG System"])
 app.include_router(ingest.router, prefix="/api/ingest", tags=["Data Ingestion"])
+app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz Creation"])
 
 
 @app.get("/", tags=["Health Check"])

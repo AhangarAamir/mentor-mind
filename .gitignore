@@ -1,2 +1,3 @@
 .venv
 mentor.zip
+__pycache*

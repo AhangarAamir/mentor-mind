@@ -9,9 +9,11 @@ def generate_report_content(report_data: dict) -> str:
     
     content += f"Summary:\n"
     content += f"- Total Quizzes Attempted: {report_data['quiz_attempts']}\n"
-    content += f"- Average Score: {report_data['average_score']:.2f}%\n\n"
+    content += f"- Average Score: {report_data.get('average_score', 0.0):.2f}%\n"
+    content += f"- Lessons Completed: {report_data.get('lessons_completed', 0)}\n"
+    content += f"- Current Learning Streak: {report_data.get('learning_streak_days', 0)} days\n\n"
     
-    if report_data['weak_topics']:
+    if report_data.get('weak_topics'):
         content += "Topics to Focus On:\n"
         for topic in report_data['weak_topics']:
             content += f"- {topic}\n"

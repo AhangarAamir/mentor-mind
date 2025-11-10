@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from peewee import PeeweeException
+from peewee_migrate import Router
 
 from app.api import auth, users, parents, students, rag, ingest, quiz
 from app.db.base import database
@@ -14,6 +15,7 @@ from app.db.models import (
 )
 from app.services.chroma_service import ChromaService
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 
 
 # Configure logging
@@ -31,27 +33,23 @@ async def lifespan(app: FastAPI):
     """
     Handles application startup and shutdown events.
     """
-    logger.info("Application startup...")
+    print("Application startup...")
     try:
-        # Connect to the database
-        database.connect()
-        logger.info("Database connection established.")
 
-        # Create tables if they don't exist
-        database.create_tables(MODELS)
-        logger.info("Database tables created or verified.")
-
+        # Run migrations
+        router = Router(database, migrate_dir=settings.MIGRATIONS_DIR)
+        router.run()
+        print("Database migrations applied.")
         # Initialize ChromaDB service
         ChromaService.initialize()
-        logger.info("ChromaDB service initialized.")
+        print("ChromaDB service initialized.")
 
     except PeeweeException as e:
-        logger.error(f"Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
         # Depending on the policy, you might want to exit the application
         # For now, we log the error and continue, but some operations will fail.
     except Exception as e:
-        logger.error(f"An error occurred during startup: {e}")
-
+        print(f"An error occurred during startup: {e}")
     yield
 
     # Shutdown logic
@@ -79,10 +77,8 @@ app.add_middleware(
 # --- Middleware to manage database connection state ---
 @app.middleware("http")
 async def db_session_middleware(request: Request, call_next):
-    database.state.reset()
     try:
-        if database.is_closed():
-            database.connect(reuse_if_open=True)
+        database.connect(reuse_if_open=True)
         response = await call_next(request)
     except Exception as e:
         logger.exception("Database middleware error: %s", e)

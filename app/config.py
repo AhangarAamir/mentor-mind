@@ -5,7 +5,11 @@ from pathlib import Path
 
 # Define the base directory of the project
 # This makes the paths work both locally and inside the Docker container
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATABASE_DIR = BASE_DIR / "data" / "database"
+MIGRATIONS_DIR = BASE_DIR / "migrations"
+MIGRATIONS_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Settings(BaseSettings):
@@ -13,7 +17,7 @@ class Settings(BaseSettings):
     Application settings loaded from .env file.
     """
     # Database configuration
-    DATABASE_URL: str = "postgresql://user:password@db:5432/mentormind_db"
+    DATABASE_URL: str = f"sqlite:///{DATABASE_DIR}/test.db"
 
     # Redis configuration for Celery
     REDIS_URL: str = "redis://redis:6379/0"
@@ -36,12 +40,17 @@ class Settings(BaseSettings):
 
     # File storage
     PDF_UPLOAD_DIR: str = str(BASE_DIR / "data" / "pdfs")
+    BACKEND_DIR : str = str(BASE_DIR / "migrations")
+    MIGRATIONS_DIR : str = str(MIGRATIONS_DIR)
 
     # Pydantic settings configuration
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding='utf-8', extra='ignore')
 
+
 # Create a single instance of the settings
 settings = Settings()
+
+print("Database URL:", settings.DATABASE_URL)
 
 # Ensure data directories exist
 os.makedirs(settings.PDF_UPLOAD_DIR, exist_ok=True)

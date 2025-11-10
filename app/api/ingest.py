@@ -5,13 +5,13 @@ import os
 
 from app.config import settings
 from app.db.models import User, IngestionStatus
-from app.db.crud import create_ingestion_job
+from app.db.crud import create_ingestion_job, get_ingestion_job_by_id
 from app.core.dependencies import get_current_admin_user
-from app.tasks.tasks import process_pdf_ingestion
+from app.tasks.tasks import process_pdf_ingestion_sync
 
 router = APIRouter()
 
-@router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/upload", status_code=status.HTTP_200_OK)
 async def upload_pdf_for_ingestion(
     grade: Annotated[int, Form()],
     subject: Annotated[str, Form()],
@@ -20,8 +20,7 @@ async def upload_pdf_for_ingestion(
     current_user: User = Depends(get_current_admin_user)
 ):
     """
-    Admin endpoint to upload a PDF, create an ingestion job,
-    and trigger the background processing task.
+    Admin endpoint to upload a PDF and process it synchronously.
     """
     if file.content_type != "application/pdf":
         raise HTTPException(
@@ -50,12 +49,21 @@ async def upload_pdf_for_ingestion(
         status=IngestionStatus.PENDING
     )
 
-    # Trigger the Celery task
-    process_pdf_ingestion.delay(job.id)
+    # Process the file synchronously
+    try:
+        process_pdf_ingestion_sync(job.id)
+    except Exception as e:
+        # The processing function handles setting the FAILED status
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF processing failed: {e}"
+        )
+    
+    processed_job = get_ingestion_job_by_id(job.id)
 
     return {
-        "message": "PDF uploaded and ingestion process started.",
-        "job_id": job.id,
-        "filename": file.filename,
-        "status": job.status.value
+        "message": "PDF processed successfully.",
+        "job_id": processed_job.id,
+        "filename": processed_job.filename,
+        "status": processed_job.status
     }

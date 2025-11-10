@@ -1,42 +1,28 @@
-# /mentormind-backend/app/db/base.py
-import contextvars
-from peewee import PostgresqlDatabase, Model
+import json
+from peewee import Model, TextField
+from playhouse.db_url import connect
 from app.config import settings
+from peewee_migrate import Router
 
-# Thread-safe connection handling
-db_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
-db_state = contextvars.ContextVar("db_state", default=db_state_default.copy())
 
-class PeeweeConnectionState:
-    def __init__(self, **kwargs):
-        super().__setattr__("_state", db_state)
-        for key, value in kwargs.items():
-            self._state.get()[key] = value
+class JSONField(TextField):
+    def db_value(self, value):
+        return json.dumps(value)
 
-    def __getattr__(self, name):
-        return self._state.get()[name]
-
-    def __setattr__(self, name, value):
-        self._state.get()[name] = value
-
-    def reset(self):
-        """Reset Peewee connection state (compatible with Peewee internals)."""
-        self._state.set(db_state_default.copy())
-
-    def set(self, new_state):
-        """Explicitly replace current state."""
-        self._state.set(new_state)
-
-# Initialize the PostgreSQL database
-database = PostgresqlDatabase(
-    settings.DATABASE_URL.split('/')[-1],  # db name
-    user=settings.DATABASE_URL.split('//')[1].split(':')[0],
-    password=settings.DATABASE_URL.split(':')[2].split('@')[0],
-    host="localhost",
-    port=settings.DATABASE_URL.split(':')[-1].split('/')[0]
+    def python_value(self, value):
+        if value is not None:
+            return json.loads(value)
+        
+database = connect(settings.DATABASE_URL)
+print(f"Connected to a {database.__class__.__name__} database.")
+router = Router(
+    database,
+    migrate_dir=settings.BACKEND_DIR,
+    # logger=log,
 )
+# router.run() # Commented out to prevent circular import during app startup
 
-database.state = PeeweeConnectionState()
+database.connect(reuse_if_open=True)
 
 class BaseModel(Model):
     class Meta:

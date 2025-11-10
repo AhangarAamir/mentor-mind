@@ -11,17 +11,17 @@ from app.services.report_service import generate_report_content
 
 logger = logging.getLogger(__name__)
 
-@shared_task(bind=True, max_retries=3)
-def process_pdf_ingestion(self, job_id: int):
+
+def process_pdf_ingestion_sync(job_id: int):
     """
-    Celery task to process a PDF file for ingestion into ChromaDB.
+    Synchronously processes a PDF file for ingestion into ChromaDB.
     """
     logger.info(f"Starting PDF ingestion for job_id: {job_id}")
     
     job = get_ingestion_job_by_id(job_id)
     if not job:
         logger.error(f"Ingestion job with id {job_id} not found.")
-        return
+        raise ValueError(f"Ingestion job with id {job_id} not found.")
 
     update_ingestion_job_status(job_id, IngestionStatus.PROCESSING)
     
@@ -29,7 +29,7 @@ def process_pdf_ingestion(self, job_id: int):
     if not os.path.exists(file_path):
         logger.error(f"File not found: {file_path}")
         update_ingestion_job_status(job_id, IngestionStatus.FAILED)
-        return
+        raise FileNotFoundError(f"File not found: {file_path}")
 
     try:
         # 1. Extract text from PDF
@@ -63,7 +63,8 @@ def process_pdf_ingestion(self, job_id: int):
     except Exception as e:
         logger.error(f"Error processing PDF for job_id {job_id}: {e}")
         update_ingestion_job_status(job_id, IngestionStatus.FAILED)
-        self.retry(exc=e, countdown=60) # Retry after 1 minute
+        raise e  # Re-raise to be handled by the API endpoint
+
 
 @shared_task
 def generate_weekly_reports():
